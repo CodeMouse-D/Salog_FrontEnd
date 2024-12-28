@@ -790,6 +790,7 @@ const Container = styled.div<{ open: boolean }>`
     }
 
     button {
+      display: none;
       font-size: 1.2rem;
       padding: 0.8rem 2rem;
       border-radius: 4px;
