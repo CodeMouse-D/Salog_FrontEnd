@@ -34,5 +34,5 @@
     "jsx": "react-jsx",
     "baseUrl": "."
   },
-  "include": ["src", "lib/**/*"]
+  "include": ["src", "lib/**/*","**/*.ts", "cypress.config.js"]
 }
