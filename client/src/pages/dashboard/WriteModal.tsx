@@ -795,6 +795,8 @@ const Container = styled.div<{ $isOpen: boolean }>`
 
   .receipt {
     display: flex;
+    /* 영수증 기능 숨김 */
+    display: none !important;
     flex-direction: column;
     margin-top: 1.5rem;
 
@@ -818,6 +820,8 @@ const Container = styled.div<{ $isOpen: boolean }>`
 
   .explanation {
     display: flex;
+    /* 영수증 기능 숨김 */
+    display: none !important;
     margin-top: 0.8rem;
 
     p {
