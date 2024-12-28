@@ -219,153 +219,151 @@ const DashboardCalendar = ({
 export default DashboardCalendar;
 
 const Container = styled.div`
-	margin-left: 2.1rem;
-	margin-bottom: 5rem;
+  margin-left: 2.1rem;
+  margin-bottom: 5rem;
 
-    .color__info {
-		z-index: 3;
-        display: flex;
-        align-items:center;
-        margin-top: 2.2rem;
-        margin-left: 1.5rem;
-        font-size: 1.2rem;
-        position: absolute;
+  .color__info {
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    margin-top: 2.2rem;
+    margin-left: 1.5rem;
+    font-size: 1.2rem;
+    position: absolute;
 
-        .income {
-            margin-left: 1rem;
-            border-radius: 50%;
-            width: 0.9rem;
-            height: 0.9rem;
-            background: ${(props) => props.theme.COLORS.LIGHT_RED}
-        }
-
-        .outgo {
-              margin-left: 1rem;
-            border-radius: 50%;
-            width: 0.9rem;
-            height: 0.9rem;
-            background: ${(props) => props.theme.COLORS.LIGHT_GREEN}
-        }
-
-        p {
-            margin-left: 0.5rem;
-        }
+    .income {
+      margin-left: 1rem;
+      border-radius: 50%;
+      width: 0.9rem;
+      height: 0.9rem;
+      background: ${(props) => props.theme.COLORS.LIGHT_RED};
     }
 
-    .write__icon {
-        margin-left: 6rem;
-		z-index: 100;
-
-        &:hover {
-            transition: all 0.5s;
-            transform: scale(1.1);
-        }
+    .outgo {
+      margin-left: 1rem;
+      border-radius: 50%;
+      width: 0.9rem;
+      height: 0.9rem;
+      background: ${(props) => props.theme.COLORS.LIGHT_GREEN};
     }
 
-	.react-calendar {
+    p {
+      margin-left: 0.5rem;
+    }
+  }
+
+  .write__icon {
+    margin-left: 6rem;
+    z-index: 100;
+
+    &:hover {
+      transition: all 0.5s;
+      transform: scale(1.1);
+    }
+  }
+
+  .react-calendar {
     font-size: 1.6rem; // 반응형으로 해야함
-		width: 77rem;
-		height: 42.8rem;
-		overflow-y: scroll;
-		padding: 0 1.5rem;
-		border-radius: 8px;
-		border: 1px solid #d9d9d9;
-		font-family: "Pretendard-Regular";
+    width: 77rem;
+    height: 42.8rem;
+    overflow-y: scroll;
+    padding: 0 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #d9d9d9;
+    font-family: "Pretendard-Regular";
 
     .calendar__tileContent {
-        position: absolute;
-		width: 10rem;
-		height: 3.8rem;
-        margin-top: 1.4rem;
+      position: absolute;
+      width: 10rem;
+      height: 3.8rem;
+      margin-top: 1.4rem;
     }
 
-        .tileContent__income{
-            font-size: 1rem;
-            line-height: 10px;
-			margin-top: 0.5rem;
-            color: ${(props) => props.theme.COLORS.LIGHT_GREEN}
-        }
-
-        .tileContent__outgo {
-            font-size: 1rem;
-            line-height: 10px;
-			margin-top: 0.5rem;
-            color: ${(props) => props.theme.COLORS.LIGHT_RED}
-        }
-	}
-
-	.react-calendar__navigation {
-		display:flex;
-		align-items: flex-end;
-		height: 3.5rem;
-		z-index: 2;
-		position: sticky;
-		top:0;
-		background: white;
-        justify-content: center;
-
-		span {
-			font-size: 1.6rem;
-			font-weight: 600;
-		}
-	}
-
-    .react-calendar__navigation button {
-        max-width: 20rem;
+    .tileContent__income {
+      font-size: 1rem;
+      line-height: 10px;
+      margin-top: 0.5rem;
+      color: ${(props) => props.theme.COLORS.LIGHT_GREEN};
     }
 
-    .react-calendar__navigation button:disabled{
-        background: none;
-        cursor: auto;
+    .tileContent__outgo {
+      font-size: 1rem;
+      line-height: 10px;
+      margin-top: 0.5rem;
+      color: ${(props) => props.theme.COLORS.LIGHT_RED};
     }
+  }
 
-    .react-calendar__navigation button:enabled:focus{
-        background: none;
+  .react-calendar__navigation {
+    display: flex;
+    align-items: flex-end;
+    height: 3.5rem;
+    z-index: 2;
+    position: sticky;
+    top: 0;
+    background: white;
+    justify-content: center;
+
+    span {
+      font-size: 1.6rem;
+      font-weight: 600;
     }
+  }
 
-	.react-calendar__month-view__weekdays {
-		text-align: left;
-		abbr {
-			// 텍스트 부분
-			font-size: 1.2rem;
-			font-weight: 700;
-		}
-	}
+  .react-calendar__navigation button {
+    max-width: 20rem;
+  }
 
-	.react-calendar__tile {
+  .react-calendar__navigation button:disabled {
+    background: none;
+    cursor: auto;
+  }
+
+  .react-calendar__navigation button:enabled:focus {
+    background: none;
+  }
+
+  .react-calendar__month-view__weekdays {
+    text-align: left;
+    abbr {
+      // 텍스트 부분
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+  }
+
+  .react-calendar__tile {
     position: relative;
-		height: 6.8rem;
-		border-bottom: 1px solid #eeeeee;
-        display: flex;
-        align-self: start;
-		text-align: left;
-s	}
+    height: 6.8rem;
+    border-bottom: 1px solid #eeeeee;
+    display: flex;
+    align-self: start;
+    text-align: left;
+  }
 
-	.react-calendar__tile:enabled:hover,
-	.react-calendar__tile:enabled:focus,
-	 {
-		background: rgb(245, 245, 249);
-	}
+  .react-calendar__tile:enabled:hover,
+  .react-calendar__tile:enabled:focus {
+    background: rgb(245, 245, 249);
+  }
 
-	.react-calendar__tile--active{
-		background: transparent;
-	}
+  .react-calendar__tile--active {
+    background: transparent;
+  }
 
-    .react-calendar__tile--active:enabled:hover, .react-calendar__tile--active:enabled:focus{
-        background: rgb(245, 245, 249);
-        color: ${(props) => props.theme.COLORS.LIGHT_BLUE};
+  .react-calendar__tile--active:enabled:hover,
+  .react-calendar__tile--active:enabled:focus {
+    background: rgb(245, 245, 249);
+    color: ${(props) => props.theme.COLORS.LIGHT_BLUE};
+  }
 
-    }
+  .react-calendar__tile--active {
+    color: black;
+  }
 
-	.react-calendar__tile--active {
-		color: black;
-	}
-
-
-	.react-calendar__tile--now {
-		background: none;
-		color: ${(props) => props.theme.COLORS.LIGHT_BLUE};
-	}
+  .react-calendar__tile--now {
+    background: none;
+    color: ${(props) => props.theme.COLORS.LIGHT_BLUE};
+  }
 `;
 
 const Wrapper = styled.div<{ $buttonDisplay: boolean }>`
