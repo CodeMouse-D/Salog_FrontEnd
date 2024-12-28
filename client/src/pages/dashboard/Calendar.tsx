@@ -91,7 +91,7 @@ const DashboardCalendar = ({
           getActiveMonth(activeStartDate);
         }}
         formatDay={(locale, date) =>
-          new Date(date).toLocaleDateString("en-us" || locale, {
+          new Date(date).toLocaleDateString(locale ?? "en-us", {
             day: "numeric",
           })
         }
