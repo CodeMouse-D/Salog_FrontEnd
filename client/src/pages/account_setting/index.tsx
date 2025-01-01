@@ -474,6 +474,8 @@ const Container = styled.div`
 
   .category {
     display: flex;
+    /* 카테고리 추가 기능 제거 */
+    display: none !important;
     flex-direction: column;
 
     > p {
