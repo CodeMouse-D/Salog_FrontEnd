@@ -133,8 +133,8 @@ const DiaryUpdate = () => {
       Toast(ToastType.error, "제목과 내용을 입력해주세요");
     } else if (values.title.length === 0) {
       Toast(ToastType.error, "제목을 입력해주세요");
-    } else if (values.body.replace(/(<([^>]+)>)/gi, "").length < 10) {
-      Toast(ToastType.error, "내용을 10자 이상 입력해주세요");
+    } else if (values.body.replace(/(<([^>]+)>)/gi, "").length === 0) {
+      Toast(ToastType.error, "내용을 입력해주세요");
     } else {
       api
         .patch(`/diary/update/${id}`, {
