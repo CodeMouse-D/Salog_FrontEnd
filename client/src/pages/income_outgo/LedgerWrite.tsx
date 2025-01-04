@@ -4,8 +4,7 @@ import ClearOutlinedIcon from "@mui/icons-material/ClearOutlined";
 import ArrowDropDownOutlinedIcon from "@mui/icons-material/ArrowDropDownOutlined";
 import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
 // import SimCardDownloadOutlinedIcon from "@mui/icons-material/SimCardDownloadOutlined";
-import React, { useCallback, useEffect, useState } from "react";
-import { debounce } from "src/utils/timeFunc";
+import React, { useState } from "react";
 import {
   type ledgerType,
   type outgoType,
@@ -87,6 +86,12 @@ const LedgerWrite = ({
       memo: "",
     },
   ]);
+
+  // 각 필드별 에러 상태를 관리하는 state
+  const [errors, setErrors] = useState<Record<number, Record<string, boolean>>>(
+    {}
+  );
+
   const [uploadedInfo, setUploadedInfo] = useState<UploadedInfo>({
     name: "",
     size: "",
@@ -100,11 +105,26 @@ const LedgerWrite = ({
     receiptImg: "",
   });
 
-  const [isDisabled, setIsDisabled] = useState<boolean>(true);
   const [isActive, setIsActive] = useState<boolean>(false); // 파일 드래그 active 여부
   const [progress, setProgress] = useState(0); // 업로드 진행 상황
   const [isLoading, setIsLoading] = useState<boolean>(false); // 영수증 업로드 api 요청 시 로딩 상태
   const dispatch = useDispatch();
+
+  // 필수 필드 검증 함수
+  const validateFields = (value: valueType) => {
+    const fieldErrors: Record<string, boolean> = {};
+
+    // 필수 필드 검사
+    if (!value.division) fieldErrors.division = true;
+    if (!value.date) fieldErrors.date = true;
+    if (!value.tag) fieldErrors.tag = true;
+    if (!value.name) fieldErrors.name = true;
+    if (value.division === "outgo" && !value.payment)
+      fieldErrors.payment = true;
+    if (!value.money || value.money === "0") fieldErrors.money = true;
+
+    return fieldErrors;
+  };
 
   const setFileInfo = (file: File) => {
     const { name, type } = file;
@@ -171,6 +191,31 @@ const LedgerWrite = ({
     id: number
   ) => {
     const { name, value } = e.target;
+
+    // 에러 상태 초기화
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      if (newErrors[id]) {
+        // 해당 ID의 필드 에러들을 필터링하여 새 객체 생성
+        const updatedFieldErrors = Object.fromEntries(
+          Object.entries(newErrors[id]).filter(([key]) => key !== name)
+        );
+
+        // 필드 에러가 남아있으면 유지, 없으면 해당 ID 객체 제거
+        if (Object.keys(updatedFieldErrors).length > 0) {
+          return {
+            ...newErrors,
+            [id]: updatedFieldErrors,
+          };
+        } else {
+          // ID에 해당하는 에러가 없으면 해당 ID를 제외한 새 객체 반환
+          const { [id]: _, ...rest } = newErrors;
+          return rest;
+        }
+      }
+      return newErrors;
+    });
+
     const updatedValues = values.map((item) => {
       if (item.id === id) {
         // value.division이 변경되었을 때 value.tag를 ""로 설정
@@ -282,42 +327,27 @@ const LedgerWrite = ({
     // });
   };
 
-  const checkValues = useCallback(
-    debounce((values: valuesType) => {
-      let isBlank = false;
-      let isNotValid = true;
-
-      // 빈 값 체크
-      values.forEach((value: valueType) => {
-        for (const key in value) {
-          if (value[key] === "") {
-            if (key === "payment" && value.division === "income") {
-              continue;
-            }
-            // 메모는 null 가능
-            if (key === "memo" && value.memo === "") {
-              continue;
-            }
-            isBlank = true;
-          }
-          if (key === "money" && value[key] === "0") isBlank = true;
-        }
-      });
-
-      if (!isBlank) {
-        isNotValid = false;
-      }
-
-      if (values.length === 0) {
-        isNotValid = true;
-      }
-
-      setIsDisabled(isNotValid);
-    }, 700),
-    []
-  );
-
   const onClickSubmit = async () => {
+    // 모든 행에 대해 유효성 검사 실행
+    const newErrors: Record<number, Record<string, boolean>> = {};
+    let hasError = false;
+
+    values.forEach((value) => {
+      const fieldErrors = validateFields(value);
+      if (Object.keys(fieldErrors).length > 0) {
+        hasError = true;
+        newErrors[value.id] = fieldErrors;
+      }
+    });
+
+    if (hasError) {
+      setErrors(newErrors);
+      dispatch(
+        showToast({ message: "필수 항목을 모두 입력해주세요", type: "error" })
+      );
+      return;
+    }
+
     try {
       await Promise.all(
         values.map(async (value) => {
@@ -406,10 +436,6 @@ const LedgerWrite = ({
     }
   };
 
-  useEffect(() => {
-    checkValues(values);
-  }, [values]);
-
   return (
     <Background>
       <Container open={isOpen.uploadModal}>
@@ -452,11 +478,14 @@ const LedgerWrite = ({
         </div>
         <Lists>
           {values.map((value, idx) => {
+            const fieldErrors = errors[value.id] || {};
             return (
               <li className="list" key={value.id}>
                 <div className="select">
                   <select
-                    className="category__select"
+                    className={`category__select ${
+                      fieldErrors.division ? "error" : ""
+                    }`}
                     name="division"
                     value={value.division}
                     onChange={(e) => {
@@ -475,7 +504,7 @@ const LedgerWrite = ({
                 </div>
                 <input
                   type="date"
-                  className="date__select"
+                  className={`date__select ${fieldErrors.date ? "error" : ""}`}
                   name="date"
                   value={value.date}
                   onChange={(e) => {
@@ -484,7 +513,9 @@ const LedgerWrite = ({
                 />
                 <div className="select">
                   <select
-                    className="category__select"
+                    className={`category__select ${
+                      fieldErrors.tag ? "error" : ""
+                    }`}
                     // name={
                     // 	values[value.id]?.division === "outgo"
                     // 		? "outgoTag"
@@ -555,7 +586,7 @@ const LedgerWrite = ({
                 </div>
                 <input
                   type="text"
-                  className="account__name"
+                  className={`account__name ${fieldErrors.name ? "error" : ""}`}
                   name="name"
                   value={value.name}
                   maxLength={15}
@@ -565,7 +596,9 @@ const LedgerWrite = ({
                 />
                 <div className="select">
                   <select
-                    className="category__select"
+                    className={`category__select ${
+                      fieldErrors.payment ? "error" : ""
+                    }`}
                     name="payment"
                     value={value.payment}
                     onChange={(e) => {
@@ -592,7 +625,9 @@ const LedgerWrite = ({
                   />
                 </div>
                 <input
-                  className="account__name"
+                  className={`account__name ${
+                    fieldErrors.money ? "error" : ""
+                  }`}
                   value={values[idx].money}
                   onChange={(e) => {
                     handleInputChange(e, value.id);
@@ -630,9 +665,7 @@ const LedgerWrite = ({
           />
           <p>행 추가</p>
         </div>
-        <button disabled={isDisabled} onClick={onClickSubmit}>
-          작성 완료
-        </button>
+        <button onClick={onClickSubmit}>작성 완료</button>
       </Container>
       {isOpen.uploadModal && (
         <UploadContainer
@@ -1034,6 +1067,15 @@ const Lists = styled.ul`
         right: 0;
         margin-bottom: 2rem;
       }
+    }
+  }
+
+  .category__select,
+  .date__select,
+  .account__name,
+  .memo {
+    &.error {
+      border-bottom: 1px solid #ff4444;
     }
   }
 
