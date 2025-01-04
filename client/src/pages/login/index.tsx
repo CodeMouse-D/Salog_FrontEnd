@@ -46,6 +46,7 @@ const Login = () => {
   const [values, setValues] = useState<userType>({ email: "", password: "" });
   const [error, setError] = useState<userType>({ email: "", password: "" });
   const [isVisible, setIsVisible] = useState<boolean>(false);
+  const [autoLogin, setAutoLogin] = useState<boolean>(false);
   const member = useSelector((state: RootState) => state.persistedReducer.user);
   const modal = useSelector((state: RootState) => state.persistedReducer.toast);
 
@@ -62,46 +63,15 @@ const Login = () => {
     setIsVisible(!isVisible);
   };
 
-  const onClickLoginBtn = () => {
-    // 유효성 검사가 true라면
-    axios
-      .post(`${process.env.REACT_APP_SERVER_URL}/members/login`, values)
-      .then((res) => {
-        const current = new Date();
-        current.setMinutes(current.getMinutes() + 30);
+  // 로그인 버튼 클릭 핸들러
+  const onClickLoginBtn = async () => {
+    try {
+      await handleLogin(values.email, values.password);
+    } catch (error) {
+      console.log(error);
 
-        setCookie("accessToken", res.data.accessToken, {
-          path: "/",
-          expires: current,
-        });
-        localStorage.setItem("accessToken", res.data.accessToken);
-
-        current.setMinutes(current.getMinutes() + 1440);
-        setCookie("refreshToken", res.data.refreshToken, {
-          path: "/",
-          expires: current,
-        });
-        // 전역 상태로 회원 정보를 저장
-        api
-          .get("/members/get")
-          .then((res) => {
-            dispatch(login(res.data.data));
-            // 3일 미만 남은 금융일정 전역상태로 추가
-            navigate("/dashboard");
-          })
-          .catch((error) => {
-            console.log(error);
-          });
-      })
-      .catch((error) => {
-        // 404 : 회원이 존재하지 않음 , 400 : 비밀번호가 일치하지 않음
-        console.log(error);
-
-        if (error.response.data.status === 404)
-          setError({ ...error, email: "존재하지 않는 계정입니다." });
-        if (error.response.data.status === 400)
-          setError({ ...error, password: "비밀번호가 일치하지 않습니다." });
-      });
+      // handleLogin 내부에서 이미 에러 처리됨
+    }
   };
 
   const onClickGoogleBtn = () => {
@@ -109,6 +79,87 @@ const Login = () => {
     window.location.href =
       "https://server.salog.kro.kr/oauth2/authorization/google";
   };
+
+  const handleAutoLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAutoLogin(e.target.checked);
+  };
+
+  const handleLogin = async (email: string, password: string) => {
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_SERVER_URL}/members/login`,
+        { email, password }
+      );
+
+      const current = new Date();
+      current.setMinutes(current.getMinutes() + 30);
+
+      // 토큰 설정
+      setCookie("accessToken", response.data.accessToken, {
+        path: "/",
+        expires: current,
+      });
+      localStorage.setItem("accessToken", response.data.accessToken);
+
+      // 자동 로그인 처리
+      const refreshTokenExpiry = autoLogin
+        ? new Date(current.getTime() + 30 * 24 * 60 * 60 * 1000) // 30일
+        : new Date(current.getTime() + 24 * 60 * 60 * 1000); // 1일
+
+      setCookie("refreshToken", response.data.refreshToken, {
+        path: "/",
+        expires: refreshTokenExpiry,
+      });
+
+      // 자동 로그인 정보 저장
+      if (autoLogin) {
+        localStorage.setItem("savedEmail", email);
+        localStorage.setItem("savedPassword", password);
+      } else {
+        localStorage.removeItem("savedEmail");
+        localStorage.removeItem("savedPassword");
+      }
+
+      // 사용자 정보 가져오기
+      const memberResponse = await api.get("/members/get");
+      dispatch(login(memberResponse.data.data));
+      navigate("/dashboard");
+    } catch (error: any) {
+      console.error("Login error:", error);
+
+      if (error.response?.data.status === 404) {
+        setError((prev) => ({ ...prev, email: "존재하지 않는 계정입니다." }));
+      } else if (error.response?.data.status === 400) {
+        setError((prev) => ({
+          ...prev,
+          password: "비밀번호가 일치하지 않습니다.",
+        }));
+      } else {
+        // 기타 에러 처리
+        console.error("Unexpected error during login:", error);
+      }
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    const checkSavedCredentials = async () => {
+      const savedEmail = localStorage.getItem("savedEmail");
+      const savedPassword = localStorage.getItem("savedPassword");
+
+      if (savedEmail && savedPassword) {
+        setValues({ email: savedEmail, password: savedPassword });
+        setAutoLogin(true);
+        try {
+          await handleLogin(savedEmail, savedPassword);
+        } catch (error) {
+          console.error("자동 로그인 실패:", error);
+        }
+      }
+    };
+
+    void checkSavedCredentials();
+  }, []);
 
   // user 전역 상태가 변경되면 실행
   useDidMountEffect(() => {
@@ -197,6 +248,15 @@ const Login = () => {
             </button>
           </PasswordLabel>
           <span>{error.password}</span>
+          <AutoLoginWrapper>
+            <input
+              type="checkbox"
+              id="autoLogin"
+              checked={autoLogin}
+              onChange={handleAutoLoginChange}
+            />
+            <label htmlFor="autoLogin">자동 로그인</label>
+          </AutoLoginWrapper>
           <SubmitBtn onClick={onClickLoginBtn}>
             <p>로그인</p>
           </SubmitBtn>
@@ -316,6 +376,25 @@ const Title = styled.p`
   color: ${(props) => props.theme.COLORS.GRAY_500};
   margin-top: 2rem;
   margin-bottom: 1.5rem;
+`;
+
+const AutoLoginWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  margin-top: 1rem;
+
+  input[type="checkbox"] {
+    width: 1.6rem;
+    height: 1.6rem;
+    margin-right: 0.8rem;
+    cursor: pointer;
+  }
+
+  label {
+    color: ${(props) => props.theme.COLORS.GRAY_500};
+    font-size: 1.4rem;
+    cursor: pointer;
+  }
 `;
 
 export const SubmitBtn = styled.button`
