@@ -78,7 +78,7 @@ const LedgerWrite = ({
     {
       id: 1,
       division: "",
-      date: "",
+      date: new Date().toISOString().split("T")[0], // 오늘 날짜 설정,
       tag: "",
       name: "",
       payment: "",
@@ -86,6 +86,8 @@ const LedgerWrite = ({
       memo: "",
     },
   ]);
+
+  console.log(values);
 
   // 각 필드별 에러 상태를 관리하는 state
   const [errors, setErrors] = useState<Record<number, Record<string, boolean>>>(
@@ -310,7 +312,7 @@ const LedgerWrite = ({
   const onClickPlusBtn = () => {
     const initialValues: valueType = {
       division: "",
-      date: "",
+      date: new Date().toISOString().split("T")[0], // 오늘 날짜 설정,
       tag: "",
       name: "",
       payment: "",
@@ -518,6 +520,7 @@ const LedgerWrite = ({
                   className={`date__select ${fieldErrors.date ? "error" : ""}`}
                   name="date"
                   value={value.date}
+                  defaultValue={new Date().toISOString().split("T")[0]} // 오늘 날짜 설정
                   onChange={(e) => {
                     handleInputChange(e, value.id);
                   }}

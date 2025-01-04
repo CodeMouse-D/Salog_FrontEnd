@@ -239,7 +239,10 @@ const DiaryUpdate = () => {
           <ReactQuillComponent body={values.body} onChangeBody={onChangeBody} />
         </WriteContainer>
         <BookContainer>
-          <h3>작성한 가계부</h3>
+          <h3>
+            {`${date}`}
+            <br /> 작성한 가계부
+          </h3>
           <div className="outgo__lists">
             <h5>{`지출 : ${outgo.length}건`}</h5>
             <div className="lists__header">

@@ -180,9 +180,9 @@ const Setting = () => {
         <div className="profile">
           <SvgIcon
             component={
-              member.socialType === "GOOGLE"
-                ? GoogleIcon
-                : AccountCircleOutlinedIcon
+              member.socialType === "GOOGLE" // 조건 추가
+                ? GoogleIcon // 구글 로그인
+                : AccountCircleOutlinedIcon // 일반 로그인
             }
             sx={{ stroke: "#ffffff", strokeWidth: 0.3 }}
           />
