@@ -64,7 +64,8 @@ const Login = () => {
   };
 
   // 로그인 버튼 클릭 핸들러
-  const onClickLoginBtn = async () => {
+  const onClickLoginBtn = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     try {
       await handleLogin(values.email, values.password);
     } catch (error) {
@@ -223,43 +224,51 @@ const Login = () => {
           로그인
         </h2>
         <LoginDiv>
-          <Title>이메일</Title>
-          <Input type="email" name="email" onChange={onChangeValues} />
-          <span>{error.email}</span>
-          <Title>비밀번호</Title>
-          <PasswordLabel>
+          <form onSubmit={onClickLoginBtn}>
+            <Title>이메일</Title>
             <Input
-              type={isVisible ? "text" : "password"}
-              name="password"
+              type="email"
+              name="email"
               onChange={onChangeValues}
+              value={values.email}
             />
-            <button onClick={onClickVisibleBtn}>
-              {isVisible ? (
-                <SvgIcon
-                  component={VisibilityOffRoundedIcon}
-                  sx={{ stroke: "#ffffff", strokeWidth: 1 }}
-                />
-              ) : (
-                <SvgIcon
-                  component={VisibilityRoundedIcon}
-                  sx={{ stroke: "#ffffff", strokeWidth: 1 }}
-                />
-              )}
-            </button>
-          </PasswordLabel>
-          <span>{error.password}</span>
-          <AutoLoginWrapper>
-            <input
-              type="checkbox"
-              id="autoLogin"
-              checked={autoLogin}
-              onChange={handleAutoLoginChange}
-            />
-            <label htmlFor="autoLogin">자동 로그인</label>
-          </AutoLoginWrapper>
-          <SubmitBtn onClick={onClickLoginBtn}>
-            <p>로그인</p>
-          </SubmitBtn>
+            <span>{error.email}</span>
+            <Title>비밀번호</Title>
+            <PasswordLabel>
+              <Input
+                type={isVisible ? "text" : "password"}
+                name="password"
+                onChange={onChangeValues}
+                value={values.password}
+              />
+              <button type="button" onClick={onClickVisibleBtn}>
+                {isVisible ? (
+                  <SvgIcon
+                    component={VisibilityOffRoundedIcon}
+                    sx={{ stroke: "#ffffff", strokeWidth: 1 }}
+                  />
+                ) : (
+                  <SvgIcon
+                    component={VisibilityRoundedIcon}
+                    sx={{ stroke: "#ffffff", strokeWidth: 1 }}
+                  />
+                )}
+              </button>
+            </PasswordLabel>
+            <span>{error.password}</span>
+            <AutoLoginWrapper>
+              <input
+                type="checkbox"
+                id="autoLogin"
+                checked={autoLogin}
+                onChange={handleAutoLoginChange}
+              />
+              <label htmlFor="autoLogin">자동 로그인</label>
+            </AutoLoginWrapper>
+            <SubmitBtn type="submit">
+              <p>로그인</p>
+            </SubmitBtn>
+          </form>
         </LoginDiv>
         <RedirectContainer>
           <p>비밀번호를 잊으셨나요?</p>
