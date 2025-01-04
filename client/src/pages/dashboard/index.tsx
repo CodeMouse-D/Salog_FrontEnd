@@ -100,7 +100,7 @@ const Dashboard = () => {
         console.log(error);
       });
     api
-      .get(`/income/monthly?date=${moment().format("YYYY-MM-DD")}`)
+      .get(`/income/monthly?date=${moment().format("YYYY-MM")}`)
       .then((res) => {
         setMonthlyIncome(res.data);
       })
