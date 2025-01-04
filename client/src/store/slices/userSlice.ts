@@ -6,6 +6,7 @@ const userSlice = createSlice({
 		isLoggedIn: false,
 		emailAlarm: false,
 		homeAlarm: false,
+		socialType: null,
 		createdAt: "",
 		email: "",
 		incomeTags: [],
@@ -16,6 +17,7 @@ const userSlice = createSlice({
 			state.isLoggedIn = true;
 			state.emailAlarm = action.payload.emailAlarm;
 			state.homeAlarm = action.payload.homeAlarm;
+			state.socialType = action.payload.socialType;
 			state.createdAt = action.payload.createdAt;
 			state.email = action.payload.email;
 			state.incomeTags = action.payload.incomeTags;

@@ -20,6 +20,8 @@ interface inputType {
 
 const Setting = () => {
   const member = useSelector((state: RootState) => state.persistedReducer.user);
+  console.log(member);
+
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [values, setValues] = useState<inputType>({
     currentPassword: "",
