@@ -259,7 +259,11 @@ const WriteModal = ({
   const onClickSubmit = () => {
     if (!validateForm()) {
       return dispatch(
-        showToast({ message: "필수 항목을 모두 입력해주세요", type: "error" })
+        showToast({
+          message: "필수 항목을 모두 입력해주세요",
+          type: "error",
+          toastId: "write-error",
+        })
       );
     }
 

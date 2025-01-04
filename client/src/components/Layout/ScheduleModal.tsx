@@ -212,6 +212,7 @@ const ScheduleModal = ({ isOpen, setIsOpen }: Props) => {
       showToast({
         message: "작성이 완료되었습니다",
         type: "success",
+        toastId: "write-success", // toastId 추가
       })
     );
 

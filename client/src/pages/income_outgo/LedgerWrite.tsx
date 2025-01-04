@@ -350,7 +350,11 @@ const LedgerWrite = ({
     if (hasError) {
       setErrors(newErrors);
       dispatch(
-        showToast({ message: "필수 항목을 모두 입력해주세요", type: "error" })
+        showToast({
+          message: "필수 항목을 모두 입력해주세요",
+          type: "error",
+          toastId: "write-error",
+        })
       );
       return;
     }
