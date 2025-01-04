@@ -3,11 +3,10 @@ import moment from "moment";
 import type { Moment } from "moment";
 import { useEffect, useState } from "react";
 import { SvgIcon } from "@mui/material";
-import ArrowBackIosOutlinedIcon from "@mui/icons-material/ArrowBackIosOutlined";
-import ArrowForwardIosOutlinedIcon from "@mui/icons-material/ArrowForwardIosOutlined";
+
 import ArrowUpwardRoundedIcon from "@mui/icons-material/ArrowUpwardRounded";
 import ArrowDownwardRoundedIcon from "@mui/icons-material/ArrowDownwardRounded";
-import CalendarTodayOutlinedIcon from "@mui/icons-material/CalendarTodayOutlined";
+
 import CreateOutlinedIcon from "@mui/icons-material/CreateOutlined";
 import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
 import RemoveCircleOutlineOutlinedIcon from "@mui/icons-material/RemoveCircleOutlineOutlined";
@@ -25,8 +24,7 @@ import { showToast } from "src/store/slices/toastSlice";
 import { api } from "src/utils/refreshToken";
 import UpdateModal from "./UpdateModal";
 import PaginationComponent from "src/components/Layout/Paging";
-// import DateSelector from "./DateSelector";
-import Calendar from "./Calendar";
+import DateSelector from "./DateSelector";
 
 export interface ledgerType {
   outgoId: number;
@@ -134,13 +132,13 @@ export interface PageInfoObj {
 
 const History = () => {
   const [getMoment, setMoment] = useState(moment());
-  const [isCalendarOpen, setIsCalendarOpen] = useState<boolean>(false);
 
   const [ledger, setLedger] = useState<ledgerType[]>([]);
   const [outgo, setOutgo] = useState<outgoType[]>([]);
   const [income, setIncome] = useState<incomeType[]>([]);
   const [waste, setWaste] = useState<wasteType[]>([]);
 
+  console.log(ledger);
   const [pageInfoObj, setPageInfoObj] = useState<PageInfoObj>({
     outgo: {
       pageNumber: 0,
@@ -612,6 +610,59 @@ const History = () => {
     }
   };
 
+  const handleDateRangeSelect = async (startDate: Moment, endDate: Moment) => {
+    try {
+      const requests = [
+        api.get(
+          `/outgo/range?page=${activePage}&size=10&startDate=${startDate.format(
+            "YYYY-MM-DD"
+          )}&endDate=${endDate.format("YYYY-MM-DD")}`
+        ),
+        api.get(
+          `/income/range?page=${activePage}&size=10&startDate=${startDate.format(
+            "YYYY-MM-DD"
+          )}&endDate=${endDate.format("YYYY-MM-DD")}`
+        ),
+        api.get(
+          `/outgo/wasteList/range?page=${activePage}&size=10&startDate=${startDate.format(
+            "YYYY-MM-DD"
+          )}&endDate=${endDate.format("YYYY-MM-DD")}`
+        ),
+        api.get(
+          `/calendar/ledger/range?page=${activePage}&size=10&startDate=${startDate.format(
+            "YYYY-MM-DD"
+          )}&endDate=${endDate.format("YYYY-MM-DD")}`
+        ),
+      ];
+
+      const responses = await axios.all(requests);
+      console.log(responses);
+
+      setOutgo(responses[0].data.data);
+      setPageInfoObj((prevPageInfoObj) => ({
+        ...prevPageInfoObj,
+        outgo: responses[0].data.pageInfo,
+      }));
+      setIncome(responses[1].data.data);
+      setPageInfoObj((prevPageInfoObj) => ({
+        ...prevPageInfoObj,
+        income: responses[1].data.pageInfo,
+      }));
+      setWaste(responses[2].data.data);
+      setPageInfoObj((prevPageInfoObj) => ({
+        ...prevPageInfoObj,
+        waste: responses[2].data.pageInfo,
+      }));
+      setLedger(responses[3].data.data);
+      setPageInfoObj((prevPageInfoObj) => ({
+        ...prevPageInfoObj,
+        combined: responses[3].data.pageInfo,
+      }));
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
     const date = getMoment.format("YYYY-MM");
     const customDate = `${date}-00`;
@@ -628,7 +679,6 @@ const History = () => {
             `/calendar/ledger?page=${activePage}&size=10&date=${customDate}`
           ),
         ];
-        
 
         const responses = await axios.all(requests);
 
@@ -665,7 +715,7 @@ const History = () => {
   useEffect(() => {
     const fetchData = async () => {
       const date = getMoment.format("YYYY-MM");
-      const customDate = `${date}-00`;
+      const customDate = `${date}`;
       try {
         const requests = [
           api.get(`/outgo/monthly?date=${customDate}`),
@@ -714,40 +764,11 @@ const History = () => {
         <h3>가계부 내역</h3>
         <SubHeader>
           <div className="sub__left">
-            <div className="date__div">
-              <button
-                onClick={() => {
-                  setMoment(getMoment.clone().subtract(1, "month"));
-                }}
-              >
-                <SvgIcon
-                  component={ArrowBackIosOutlinedIcon}
-                  sx={{ stroke: "#ffffff", strokeWidth: 0.3 }}
-                />
-              </button>
-              <DateSelector
-                onClick={() => {
-                  setIsCalendarOpen(true);
-                }}
-              >
-                {getMoment.format("YYYY-MM")}
-                <SvgIcon
-                  component={CalendarTodayOutlinedIcon}
-                  sx={{ fontSize: "1.4rem", color: "#464656" }}
-                />
-              </DateSelector>
-
-              <button
-                onClick={() => {
-                  setMoment(getMoment.clone().add(1, "month"));
-                }}
-              >
-                <SvgIcon
-                  component={ArrowForwardIosOutlinedIcon}
-                  sx={{ stroke: "#ffffff", strokeWidth: 0.3 }}
-                />
-              </button>
-            </div>
+            <DateSelector
+              getMoment={getMoment}
+              setMoment={setMoment}
+              onDateRangeSelect={handleDateRangeSelect}
+            />
             <button
               className="nowMonth__btn"
               onClick={() => {
@@ -757,23 +778,6 @@ const History = () => {
               이번 달
             </button>
           </div>
-          {/* <DateSelector
-            currentDate={getMoment}
-            onDateChange={setMoment}
-            onCalendarOpen={() => { setIsCalendarOpen(true) }}
-          /> */}
-          <Calendar
-            isOpen={isCalendarOpen}
-            onClose={() => {
-              setIsCalendarOpen(false);
-            }}
-            onSelect={(date: Moment) => {
-              setMoment(date);
-              setIsCalendarOpen(false);
-            }}
-            currentDate={getMoment}
-          />
-
           <div className="sub__right">
             <button
               className="write__btn"
@@ -1088,7 +1092,6 @@ const SubHeader = styled.div`
       display: flex;
       justify-content: center;
       align-items: center;
-      width: 10rem;
       border-top: 1px solid #bebebe;
       border-bottom: 1px solid #bebebe;
       padding: 0.6rem;
@@ -1113,26 +1116,6 @@ const SubHeader = styled.div`
     border-radius: 4px;
     color: white;
     background: ${(props) => props.theme.COLORS.LIGHT_BLUE};
-  }
-`;
-
-const DateSelector = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 4px;
-  width: 10rem;
-  border-top: 1px solid #bebebe;
-  border-bottom: 1px solid #bebebe;
-  padding: 0.6rem;
-  font-size: 1.6rem;
-  font-weight: 600;
-  color: #464656;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background-color: #f5f5f5;
   }
 `;
 

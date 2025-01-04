@@ -32,8 +32,14 @@ const Calendar: React.FC<CalendarProps> = ({
   const [hoverDate, setHoverDate] = useState<Moment | null>(null);
   const today = moment();
 
+  // Calendar 컴포넌트의 handleDateClick 수정
   const handleDateClick = (date: Moment) => {
-    if (!startDate || (startDate && endDate)) {
+    if (startDate && startDate.isSame(date, "day")) {
+      // 같은 날짜를 두 번 클릭한 경우
+      onSelect(date, date);
+      setStartDate(null);
+      setEndDate(null);
+    } else if (!startDate || (startDate && endDate)) {
       setStartDate(date);
       setEndDate(null);
     } else {
