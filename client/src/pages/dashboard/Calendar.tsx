@@ -108,10 +108,14 @@ const DashboardCalendar = ({
               <>
                 <div className="calendar__tileContent">
                   {arr[0]?.totalIncome !== 0 && (
-                    <p className="tileContent__income">{arr[0]?.totalIncome}</p>
+                    <p className="tileContent__income">
+                      {arr[0]?.totalIncome.toLocaleString()}
+                    </p>
                   )}
                   {arr[0]?.totalOutgo !== 0 && (
-                    <p className="tileContent__outgo">{arr[0]?.totalOutgo}</p>
+                    <p className="tileContent__outgo">
+                      {arr[0]?.totalOutgo.toLocaleString()}
+                    </p>
                   )}
                 </div>
                 <Wrapper

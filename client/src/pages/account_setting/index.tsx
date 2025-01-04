@@ -1,5 +1,6 @@
 import { styled } from "styled-components";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
+import GoogleIcon from "@mui/icons-material/Google"; // 구글 아이콘 import
 import { SvgIcon } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { type RootState } from "src/store";
@@ -20,7 +21,7 @@ interface inputType {
 
 const Setting = () => {
   const member = useSelector((state: RootState) => state.persistedReducer.user);
-  console.log(member);
+  console.log(member.socialType);
 
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [values, setValues] = useState<inputType>({
@@ -178,7 +179,11 @@ const Setting = () => {
       <Container>
         <div className="profile">
           <SvgIcon
-            component={AccountCircleOutlinedIcon}
+            component={
+              member.socialType === "GOOGLE"
+                ? GoogleIcon
+                : AccountCircleOutlinedIcon
+            }
             sx={{ stroke: "#ffffff", strokeWidth: 0.3 }}
           />
           <div className="user_info">
