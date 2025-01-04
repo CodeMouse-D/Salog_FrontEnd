@@ -490,7 +490,9 @@ const MonthRadio = () => {
                       )}
                   %
                 </p>
-                <p className="bar__budget">예산 : {monthlyBudget.budget}원</p>
+                <p className="bar__budget">
+                  예산 : {monthlyBudget.budget.toLocaleString()}원
+                </p>
               </div>
             </CircularProgressbarWithChildren>
           </div>

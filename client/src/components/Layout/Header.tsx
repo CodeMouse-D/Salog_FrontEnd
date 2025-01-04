@@ -331,7 +331,8 @@ export const Header = () => {
                     />
                   </ToggleContainer>
                 </div>
-                <div className="alarm__container">
+                {/* 250104 이메일 알림 기능 제거 */}
+                {/* <div className="alarm__container">
                   <p>이메일 알림 설정</p>
                   <ToggleContainer
                     $isOn={isOn.emailAlarm}
@@ -348,7 +349,7 @@ export const Header = () => {
                       }`}
                     />
                   </ToggleContainer>
-                </div>
+                </div> */}
               </div>
             </AlarmModal>
           )}

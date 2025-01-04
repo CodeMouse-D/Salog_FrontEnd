@@ -103,6 +103,7 @@ const UpdateModal = ({
     id: number
   ) => {
     const { name, value } = e.target;
+
     // 에러 상태 초기화
     setErrors((prev) => {
       const newErrors = { ...prev };
@@ -135,6 +136,13 @@ const UpdateModal = ({
             [name]: value,
             tag: "", // value.tag를 빈 문자열("")로 설정
             payment: "",
+          };
+        } else if (name === "money") {
+          // 숫자가 아닌 문자 제거
+          const numericValue = value.replace(/[^\d]/g, "");
+          return {
+            ...item,
+            [name]: numericValue,
           };
         } else {
           return {
@@ -478,14 +486,18 @@ const UpdateModal = ({
                   className={`account__name ${
                     fieldErrors.money ? "error" : ""
                   }`}
-                  value={values[idx].money}
-                  size={16}
-                  // onChange={onChangeMoney}
+                  value={
+                    values[idx].money
+                      ? Number(values[idx].money).toLocaleString()
+                      : ""
+                  }
                   onChange={(e) => {
                     handleInputChange(e, value.id);
                   }}
                   name="money"
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                 />
                 <input
                   type="text"
