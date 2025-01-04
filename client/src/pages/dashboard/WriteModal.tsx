@@ -6,8 +6,7 @@ import ClearOutlinedIcon from "@mui/icons-material/ClearOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import ArrowDropDownOutlinedIcon from "@mui/icons-material/ArrowDropDownOutlined";
 import { type incomeType, type outgoType, type modalType } from ".";
-import React, { useCallback, useEffect, useState } from "react";
-import { debounce } from "src/utils/timeFunc";
+import React, { useState } from "react";
 import { api } from "src/utils/refreshToken";
 import { useDispatch } from "react-redux";
 import { showToast } from "src/store/slices/toastSlice";
@@ -40,6 +39,13 @@ interface valuesType {
   memo: string;
 }
 
+interface ValidationErrors {
+  money: boolean;
+  category: boolean;
+  method: boolean;
+  account: boolean;
+}
+
 const WriteModal = ({
   isOpen,
   setIsOpen,
@@ -52,7 +58,7 @@ const WriteModal = ({
     hover: false,
     click: false,
   });
-  const [isDisabled, setIsDisabled] = useState<boolean>(true);
+
   const [progress, setProgress] = useState(0); // 업로드 진행 상황
   const [isLoading, setIsLoading] = useState<boolean>(false); // 영수증 업로드 api 요청 시 로딩 상태
   const [inputKey, setInputKey] = useState(Date.now()); // file 타입의 input의 onChange 이벤트 감지를 위한 상태
@@ -74,6 +80,13 @@ const WriteModal = ({
     memo: "",
   });
 
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({
+    money: false,
+    category: false,
+    method: false,
+    account: false,
+  });
+
   const dispatch = useDispatch();
 
   // input hover, click, blur 감지 후 실행 함수
@@ -92,8 +105,8 @@ const WriteModal = ({
 
   const onChangeMoney = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;
+    setValidationErrors({ ...validationErrors, money: false }); // 사용자가 입력을 시작하면 에러 상태 제거
 
-    // 입력값에 e가 입력되는 것은 추후에 막아볼 예정
     if (inputValue.startsWith("0")) {
       setValues({ ...values, money: inputValue.substring(1) });
     } else {
@@ -227,34 +240,29 @@ const WriteModal = ({
     }
   };
 
-  const checkValues = useCallback(
-    debounce((values: valuesType) => {
-      let isBlank = false;
-      let isNotValid = true;
+  const validateForm = () => {
+    const errors = {
+      money:
+        values.money === "0" ||
+        values.money === "" ||
+        Number(values.money) <= 0, // 0원 이하 체크 추가
+      category: values.category === "",
+      method: values.division === "outgo" ? values.method === "" : false,
+      account: values.account === "",
+    };
 
-      // 빈 값 체크
-      for (const key in values) {
-        if (values[key] === "") {
-          if (key === "method" && values.division === "income") {
-            continue;
-          }
-          if (key === "memo" && values.memo === "") {
-            continue;
-          }
-          isBlank = true;
-        }
-        if (key === "money" && values[key] === "0") isBlank = true;
-      }
+    setValidationErrors(errors);
 
-      if (!isBlank) {
-        isNotValid = false;
-      }
+    return !Object.values(errors).some((error) => error);
+  };
 
-      setIsDisabled(isNotValid);
-    }, 700),
-    []
-  );
   const onClickSubmit = () => {
+    if (!validateForm()) {
+      return dispatch(
+        showToast({ message: "필수 항목을 모두 입력해주세요", type: "error" })
+      );
+    }
+
     values.division === "outgo"
       ? api
           .post("/outgo/post", {
@@ -340,10 +348,6 @@ const WriteModal = ({
     });
   };
 
-  useEffect(() => {
-    checkValues(values);
-  }, [values]);
-
   return (
     <>
       <Container $isOpen={isOpen.writeIcon}>
@@ -362,13 +366,9 @@ const WriteModal = ({
         <div className="money__write">
           <div className="moneyUnit">
             <h5
-              className={
-                isHovered.hover || isHovered.click
-                  ? "fromLeft hovered"
-                  : !isHovered.hover && isHovered.click
-                    ? "fromLeft hovered"
-                    : "fromLeft"
-              }
+              className={`fromLeft ${
+                isHovered.hover || isHovered.click ? "hovered" : ""
+              } ${validationErrors.money ? "error" : ""}`}
             >
               {Number(values.money).toLocaleString()}원
             </h5>
@@ -379,7 +379,9 @@ const WriteModal = ({
             />
           </div>
           <input
-            className="money__write__input"
+            className={`money__write__input ${
+              validationErrors.money ? "error" : ""
+            }`}
             value={values.money}
             name="money"
             size={16}
@@ -424,7 +426,9 @@ const WriteModal = ({
         <div className="category">
           <p>카테고리</p>
           <select
-            className="category__select"
+            className={`category__select ${
+              validationErrors.category ? "error" : ""
+            }`}
             value={values.category}
             onChange={onChangeCategory}
             name="category"
@@ -462,7 +466,9 @@ const WriteModal = ({
         <div className="category">
           <p>결제 수단</p>
           <select
-            className="category__select"
+            className={`category__select ${
+              validationErrors.method ? "error" : ""
+            }`}
             value={values.method}
             onChange={onChangeMethod}
             name="method"
@@ -487,7 +493,9 @@ const WriteModal = ({
         <div className="account">
           <p>거래처</p>
           <input
-            className="account__input"
+            className={`account__input ${
+              validationErrors.account ? "error" : ""
+            }`}
             type="text"
             value={values.account}
             name="account"
@@ -526,9 +534,7 @@ const WriteModal = ({
         <div className="explanation">
           <p>🖊️ 영수증 업로드시 자동으로 항목이 작성됩니다</p>
         </div>
-        <button disabled={isDisabled} onClick={onClickSubmit}>
-          작성하기
-        </button>
+        <button onClick={onClickSubmit}>작성하기</button>
       </Container>
       {isOpen.receiptCheck && (
         <Background>
@@ -830,6 +836,15 @@ const Container = styled.div<{ $isOpen: boolean }>`
     }
   }
 
+  .category__select.error,
+  .account__input.error {
+    border-color: #ff4d4d;
+  }
+
+  .money__write__input.error {
+    border-bottom: 1px solid #ff4d4d;
+  }
+
   button {
     width: 100%;
     background: ${(props) => props.theme.COLORS.LIGHT_BLUE};
@@ -838,11 +853,6 @@ const Container = styled.div<{ $isOpen: boolean }>`
     margin-top: 3.5rem;
     color: white;
     font-weight: 500;
-
-    &:disabled {
-      opacity: 0.4;
-      pointer-events: none;
-    }
   }
 `;
 
