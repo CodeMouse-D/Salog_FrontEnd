@@ -628,11 +628,11 @@ const History = () => {
             "YYYY-MM-DD"
           )}&endDate=${endDate.format("YYYY-MM-DD")}`
         ),
-        api.get(
-          `/calendar/ledger/range?page=${activePage}&size=10&startDate=${startDate.format(
-            "YYYY-MM-DD"
-          )}&endDate=${endDate.format("YYYY-MM-DD")}`
-        ),
+        // api.get(
+        //   `/calendar/ledger/range?page=${activePage}&size=10&startDate=${startDate.format(
+        //     "YYYY-MM-DD"
+        //   )}&endDate=${endDate.format("YYYY-MM-DD")}`
+        // ),
       ];
 
       const responses = await axios.all(requests);
@@ -653,11 +653,11 @@ const History = () => {
         ...prevPageInfoObj,
         waste: responses[2].data.pageInfo,
       }));
-      setLedger(responses[3].data.data);
-      setPageInfoObj((prevPageInfoObj) => ({
-        ...prevPageInfoObj,
-        combined: responses[3].data.pageInfo,
-      }));
+      // setLedger(responses[3].data.data);
+      // setPageInfoObj((prevPageInfoObj) => ({
+      //   ...prevPageInfoObj,
+      //   combined: responses[3].data.pageInfo,
+      // }));
     } catch (error) {
       console.error(error);
     }
