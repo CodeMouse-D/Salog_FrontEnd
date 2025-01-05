@@ -258,6 +258,7 @@ const NullContainer = styled.div`
 `;
 
 const Receipt = styled.div<{ $exist: boolean }>`
+  display: none;
   > svg {
     cursor: ${(props) => (props.$exist ? "pointer" : "not-allowed")};
     font-size: 1.8rem;

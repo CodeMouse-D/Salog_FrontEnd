@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { SvgIcon } from "@mui/material";
-import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
+// import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 import DoNotDisturbRoundedIcon from "@mui/icons-material/DoNotDisturbRounded";
 import { type wasteType, type checkedType } from ".";
 
@@ -60,10 +60,10 @@ const WasteList = ({ waste, checkedList, checkHandler }: Props) => {
               <p>{el.payment}</p>
               <p className="money__red">{el.money.toLocaleString()}원</p>
               <p>{el.memo}</p>
-              <SvgIcon
+              {/* <SvgIcon
                 component={ReceiptLongOutlinedIcon}
                 sx={{ stroke: "#ffffff", strokeWidth: 0.3 }}
-              />
+              /> */}
               {el.wasteList && <div className="waste"></div>}
             </li>
           );
