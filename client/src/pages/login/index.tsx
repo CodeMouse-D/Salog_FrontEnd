@@ -355,8 +355,9 @@ export const PasswordLabel = styled.label`
 
   button {
     position: absolute;
-    top: 28%;
+    top: 50%;
     right: 2rem;
+    transform: translateY(-50%);
 
     svg {
       font-size: 20px;
