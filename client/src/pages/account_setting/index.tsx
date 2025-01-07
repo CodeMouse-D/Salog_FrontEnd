@@ -304,7 +304,7 @@ const Setting = () => {
 export default Setting;
 
 const Container = styled.div`
-  width: 92%;
+  width: 100%;
   padding: 3rem 8rem;
   margin-top: 3rem;
 
@@ -406,7 +406,7 @@ const Container = styled.div`
       cursor: pointer;
       text-decoration: underline;
       position: absolute;
-      bottom: 0;
+      top: 15rem;
     }
   }
 

@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import MenuIcon from "@mui/icons-material/Menu";
 import SvgIcon from "@mui/material/SvgIcon";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
@@ -53,7 +54,11 @@ interface modalType {
   income: incomeType[];
 }
 
-export const Header = () => {
+interface HeaderProps {
+  onMenuClick?: () => void;
+}
+
+export const Header = ({ onMenuClick }: HeaderProps) => {
   const member = useSelector((state: RootState) => state.persistedReducer.user);
   const modal = useSelector((state: RootState) => state.persistedReducer.toast);
   const schedule = useSelector(
@@ -233,6 +238,9 @@ export const Header = () => {
   return (
     <>
       <Container>
+        <MenuButton onClick={onMenuClick}>
+          <SvgIcon component={MenuIcon} />
+        </MenuButton>
         <Logo onClick={onClickLogo}>
           <img src={logo} alt="로고" />
           <LogoTitle>샐로그</LogoTitle>
@@ -373,6 +381,28 @@ export const Container = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+`;
+
+export const MenuButton = styled.button`
+  position: absolute;
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: ${(props) => props.theme.COLORS.GRAY_600};
+  margin-left: 2rem;
+
+  > svg {
+    font-size: 2rem;
+  }
+
+  @media (max-width: 1200px) {
+    display: block;
+  }
+
+  &:hover {
+    color: ${(props) => props.theme.COLORS.LIGHT_BLUE};
+  }
 `;
 
 export const Logo = styled.div`

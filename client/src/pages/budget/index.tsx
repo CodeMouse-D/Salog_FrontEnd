@@ -266,7 +266,7 @@ const Budget = () => {
 export default Budget;
 
 const Container = styled.div`
-  width: 92%;
+  width: 100%;
   padding: 3rem 8rem;
 
   .header {

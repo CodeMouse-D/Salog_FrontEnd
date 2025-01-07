@@ -868,7 +868,7 @@ const Fixed = () => {
 export default Fixed;
 
 const Container = styled.div`
-  width: 92%;
+  width: 100%;
   padding: 3rem 8rem;
   display: flex;
   flex-direction: column;
@@ -1353,7 +1353,7 @@ const DeleteModal = styled.div`
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 99;
+  z-index: 100;
 
   .msg__box {
     width: 36rem;

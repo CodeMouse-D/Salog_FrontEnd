@@ -364,7 +364,7 @@ const Diary = () => {
 };
 
 const Container = styled.div`
-  width: 92%;
+  width: 100%;
   display: flex;
   padding-bottom: 6.4rem;
   padding-left: 1.5rem;

@@ -1050,7 +1050,7 @@ const History = () => {
 export default History;
 
 const Container = styled.div`
-  width: 90%;
+  width: 100%;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -1317,7 +1317,7 @@ const DeleteModal = styled.div`
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 99;
+  z-index: 100;
 
   .msg__box {
     width: 36rem;

@@ -241,7 +241,7 @@ const DiaryDetail = () => {
 };
 
 const Container = styled.div`
-  width: 92%;
+  width: 100%;
   display: flex;
   height: 90vh;
   overflow: scroll;

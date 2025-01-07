@@ -528,7 +528,7 @@ const MonthRadio = () => {
 export default React.memo(MonthRadio);
 
 const Container = styled.div`
-  width: 92%;
+  width: 100%;
   padding: 3rem 8rem;
   /* margin: 2rem 3rem; */
 

@@ -215,7 +215,7 @@ const Dashboard = () => {
 };
 
 const Container = styled.div`
-  width: 90%;
+  width: 100%;
   display: flex;
   flex-direction: column;
 `;
