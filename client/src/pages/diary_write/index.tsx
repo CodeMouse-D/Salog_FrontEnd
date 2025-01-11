@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "src/components/Layout/Modal";
 import Toast, { ToastType } from "src/components/Layout/Toast";
+import { Calendar } from "lucide-react";
 import dateAsKor from "src/utils/dateAsKor";
 import { styled } from "styled-components";
 import { Input } from "../login";
@@ -18,7 +19,9 @@ export interface valuesType {
 
 const DiaryWrite = () => {
   const [values, setValues] = useState<valuesType>({ title: "", body: "" });
-
+  const [selectedDate, setSelectedDate] = useState<string>(
+    moment().format("YYYY-MM-DD")
+  );
   const [categories, setCategories] = useState<string[]>([]);
   const [category, setCategory] = useState<string>("");
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -26,6 +29,12 @@ const DiaryWrite = () => {
 
   const [outgo, setOutgo] = useState<outgoType[]>([]);
   const [income, setIncome] = useState<incomeType[]>([]);
+
+  const dateInputRef = useRef<HTMLInputElement>(null);
+
+  const handleClick = () => {
+    dateInputRef.current?.showPicker();
+  };
 
   const sumOfOutgo = () => {
     let sum = 0;
@@ -54,6 +63,10 @@ const DiaryWrite = () => {
   const onChangeValues = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setValues({ ...values, [name]: value });
+  };
+
+  const onChangeDate = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedDate(e.target.value);
   };
 
   const onChangeBody = (value: string) => {
@@ -139,7 +152,7 @@ const DiaryWrite = () => {
     } else {
       api
         .post(`/diary/post`, {
-          date: moment().format("YYYY-MM-DD"),
+          date: selectedDate,
           title: values.title,
           body: values.body,
           img: imgSrc ?? "",
@@ -154,11 +167,11 @@ const DiaryWrite = () => {
     }
   };
 
-  const nowDate = dateAsKor(new Date().toDateString());
+  // const nowDate = dateAsKor(new Date().toDateString());
 
-  useEffect(() => {
+  const fetchFinancialData = () => {
     api
-      .get(`/outgo?page=1&size=15&date=${moment().format("YYYY-MM-DD")}`)
+      .get(`/outgo?page=1&size=15&date=${selectedDate}`)
       .then((res) => {
         setOutgo(res.data.data);
       })
@@ -166,20 +179,37 @@ const DiaryWrite = () => {
         console.log(error);
       });
     api
-      .get(`/income?page=1&size=15&date=${moment().format("YYYY-MM-DD")}`)
+      .get(`/income?page=1&size=15&date=${selectedDate}`)
       .then((res) => {
         setIncome(res.data.data);
       })
       .catch((error) => {
         console.log(error);
       });
-  }, []);
+  };
+
+  useEffect(() => {
+    fetchFinancialData();
+  }, [selectedDate]);
+
   return (
     <>
       <Container>
         <WriteContainer>
           <div className="header">
-            <h3>{nowDate}</h3>
+            <DatePickerButton type="button" onClick={handleClick}>
+              <h3>{dateAsKor(new Date(selectedDate).toDateString())}</h3>
+              <Calendar size={24} color={"#868686"} />
+              <HiddenDateInput
+                ref={dateInputRef}
+                type="date"
+                value={selectedDate}
+                onChange={onChangeDate}
+                max={moment().format("YYYY-MM-DD")}
+                aria-label="날짜 선택"
+              />
+            </DatePickerButton>
+
             <div className="header_btn">
               <button onClick={onClickCancelBtn}>작성 취소</button>
               <button onClick={onClickWriteBtn}>작성 완료</button>
@@ -226,7 +256,7 @@ const DiaryWrite = () => {
         </WriteContainer>
         <BookContainer>
           <h3>
-            {`${nowDate}`}
+            {`${selectedDate}`}
             <br /> 작성한 가계부
           </h3>
           <div className="outgo__lists">
@@ -371,6 +401,42 @@ const WriteContainer = styled.div`
     border: none;
     font-size: 2.2rem;
   }
+`;
+
+const DatePickerButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  position: relative;
+  padding: 0.5rem 1rem;
+  border-radius: 0.8rem;
+  transition: all 0.2s ease;
+  border: none;
+  background: transparent;
+
+  &:hover {
+    background: ${(props) => props.theme.COLORS.GRAY_100};
+  }
+
+  h3 {
+    font-size: 2.4rem;
+    font-weight: 500;
+    color: ${(props) => props.theme.COLORS.GRAY_600};
+    cursor: pointer;
+  }
+`;
+
+const HiddenDateInput = styled.input`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
 `;
 
 const WriteInput = styled(Input)`

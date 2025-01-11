@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Modal from "src/components/Layout/Modal";
 import { BookContainer } from "../diary_detail";
 import Toast, { ToastType } from "src/components/Layout/Toast";
+import { Calendar } from "lucide-react";
 import dateAsKor from "src/utils/dateAsKor";
 import { styled } from "styled-components";
 import { Input } from "../login";
@@ -30,7 +31,13 @@ const DiaryUpdate = () => {
   const id = useParams().id;
   const navigate = useNavigate();
 
-  const nowDate = dateAsKor(new Date(date).toDateString());
+  const dateInputRef = useRef<HTMLInputElement>(null);
+
+  const handleClick = () => {
+    dateInputRef.current?.showPicker();
+  };
+
+  // const nowDate = dateAsKor(new Date(date).toDateString());
 
   // BODY에서 처음 올라온 img만 저장하여 서버로 전송(imgSrc)
   const parser = new DOMParser();
@@ -57,6 +64,10 @@ const DiaryUpdate = () => {
   const onChangeValues = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setValues({ ...values, [name]: value });
+  };
+
+  const onChangeDate = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDate(e.target.value);
   };
 
   const onChangeBody = (value: string) => {
@@ -124,40 +135,68 @@ const DiaryUpdate = () => {
     navigate(`/diary/${id}`);
   };
 
-  const onClickWriteBtn = () => {
-    // 모달창을 띄운 뒤 확인을 누르면
-    if (
-      values.title.length === 0 &&
-      values.body.replace(/(<([^>]+)>)/gi, "").length < 10
-    ) {
-      Toast(ToastType.error, "제목과 내용을 입력해주세요");
-    } else if (values.title.length === 0) {
-      Toast(ToastType.error, "제목을 입력해주세요");
-    } else if (values.body.replace(/(<([^>]+)>)/gi, "").length === 0) {
-      Toast(ToastType.error, "내용을 입력해주세요");
-    } else {
-      api
-        .patch(`/diary/update/${id}`, {
-          date,
-          title: values.title,
-          body: values.body,
-          img: imgSrc ?? "",
-          tagList: categories,
-        })
-        .then(() => {
-          navigate(`/diary/${id}`);
-        })
-        .catch((error) => {
-          console.log(error);
-        });
+  const onClickWriteBtn = async () => {
+    try {
+      if (
+        values.title.length === 0 &&
+        values.body.replace(/(<([^>]+)>)/gi, "").length < 10
+      ) {
+        Toast(ToastType.error, "제목과 내용을 입력해주세요");
+        return;
+      }
+      if (values.title.length === 0) {
+        Toast(ToastType.error, "제목을 입력해주세요");
+        return;
+      }
+      if (values.body.replace(/(<([^>]+)>)/gi, "").length === 0) {
+        Toast(ToastType.error, "내용을 입력해주세요");
+        return;
+      }
+      console.log(date);
+
+      const response = await api.patch(`/diary/update/${id}`, {
+        date: date, // 명시적으로 date 필드 포함
+        title: values.title,
+        body: values.body,
+        img: imgSrc ?? "",
+        tagList: categories,
+      });
+
+      console.log(response);
+
+      if (response.status === 200) {
+        Toast(ToastType.success, "일기가 성공적으로 수정되었습니다.");
+        navigate(`/diary/${id}`);
+      }
+    } catch (error) {
+      console.error("일기 수정 중 오류 발생:", error);
+      Toast(ToastType.error, "일기 수정 중 오류가 발생했습니다.");
     }
+  };
+
+  const fetchFinancialData = () => {
+    api
+      .get(`/outgo?page=1&size=15&date=${date}`)
+      .then((res) => {
+        setOutgo(res.data.data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+    api
+      .get(`/income?page=1&size=15&date=${date}`)
+      .then((res) => {
+        setIncome(res.data.data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   };
 
   useEffect(() => {
     api
       .get(`/diary/${id}`)
       .then((res) => {
-        console.log(res.data);
         setValues({ title: res.data.title, body: res.data.body });
         setDate(res.data.date);
         const tags: string[] = [];
@@ -169,31 +208,29 @@ const DiaryUpdate = () => {
       .catch((error) => {
         console.log(error);
       });
-
-    api
-      .get(`/outgo?page=1&size=15&date=${moment().format("YYYY-MM-DD")}`)
-      .then((res) => {
-        setOutgo(res.data.data);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-    api
-      .get(`/income?page=1&size=15&date=${moment().format("YYYY-MM-DD")}`)
-      .then((res) => {
-        setIncome(res.data.data);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
   }, []);
+
+  useEffect(() => {
+    fetchFinancialData();
+  }, [date]);
 
   return (
     <>
       <Container>
         <WriteContainer>
           <div className="header">
-            <h3>{nowDate}</h3>
+            <DatePickerButton type="button" onClick={handleClick}>
+              <h3>{dateAsKor(new Date(date).toDateString())}</h3>
+              <Calendar size={24} color={"#868686"} />
+              <HiddenDateInput
+                ref={dateInputRef}
+                type="date"
+                value={date}
+                onChange={onChangeDate}
+                max={moment().format("YYYY-MM-DD")}
+                aria-label="날짜 선택"
+              />
+            </DatePickerButton>
             <div className="header_btn">
               <button onClick={onClickCancelBtn}>수정 취소</button>
               <button onClick={onClickWriteBtn}>수정 완료</button>
@@ -387,6 +424,41 @@ const WriteContainer = styled.div`
   }
 `;
 
+const DatePickerButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  position: relative;
+  padding: 0.5rem 1rem;
+  border-radius: 0.8rem;
+  transition: all 0.2s ease;
+  border: none;
+  background: transparent;
+
+  &:hover {
+    background: ${(props) => props.theme.COLORS.GRAY_100};
+  }
+
+  h3 {
+    font-size: 2.4rem;
+    font-weight: 500;
+    color: ${(props) => props.theme.COLORS.GRAY_600};
+    cursor: pointer;
+  }
+`;
+
+const HiddenDateInput = styled.input`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+`;
 const WriteInput = styled(Input)`
   border: none !important;
 `;

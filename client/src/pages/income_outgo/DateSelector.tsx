@@ -15,12 +15,14 @@ interface DateRange {
 interface DateSelectorProps {
   getMoment: Moment;
   setMoment: (moment: Moment) => void;
-  onDateRangeSelect?: (startDate: Moment, endDate: Moment) => void;
+  onDateSelect?: (date: string) => void; // 단일 날짜 선택시 호출
+  onDateRangeSelect?: (start: Moment, end: Moment) => void; // 범위 선택시 호출
 }
 
 const DateSelector: React.FC<DateSelectorProps> = ({
   getMoment,
   setMoment,
+  onDateSelect,
   onDateRangeSelect,
 }) => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -31,19 +33,12 @@ const DateSelector: React.FC<DateSelectorProps> = ({
 
   const handleDateSelect = (startDate: Moment, endDate: Moment) => {
     if (startDate.isSame(endDate, "day")) {
-      // Single date selection - set the month view
-      setSelectedRange({ startDate: null, endDate: null });
-      setMoment(startDate);
+      // 같은 날짜를 두 번 클릭한 경우 - 단일 날짜 조회
+      onDateSelect?.(startDate.format("YYYY-MM-DD")); // 단일 날짜 문자열 전달
     } else {
-      // Date range selection
-      setSelectedRange({ startDate, endDate });
-
-      // Don't update the month view when selecting a range
+      // 서로 다른 날짜를 클릭한 경우 - 범위 조회
       if (onDateRangeSelect) {
-        onDateRangeSelect(
-          startDate.startOf("day"), // Set to start of day (00:00:00)
-          endDate.endOf("day") // Set to end of day (23:59:59)
-        );
+        onDateRangeSelect(startDate.startOf("day"), endDate.endOf("day"));
       }
     }
     setIsCalendarOpen(false);

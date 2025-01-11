@@ -610,6 +610,45 @@ const History = () => {
     }
   };
 
+  // 단일 조회 핸들러
+  const handleDateSelect = async (date: string) => {
+    // date는 "YYYY-MM-DD" 형식
+    try {
+      const requests = [
+        api.get(`/outgo?page=${activePage}&size=10&date=${date}`),
+        api.get(`/income?page=${activePage}&size=10&date=${date}`),
+        api.get(`/outgo/wasteList?page=${activePage}&size=10&date=${date}`),
+        api.get(`/calendar/ledger?page=${activePage}&size=10&date=${date}`),
+      ];
+
+      const responses = await axios.all(requests);
+
+      setOutgo(responses[0].data.data);
+      setPageInfoObj((prevPageInfoObj) => ({
+        ...prevPageInfoObj,
+        outgo: responses[0].data.pageInfo,
+      }));
+      setIncome(responses[1].data.data);
+      setPageInfoObj((prevPageInfoObj) => ({
+        ...prevPageInfoObj,
+        income: responses[1].data.pageInfo,
+      }));
+      setWaste(responses[2].data.data);
+      setPageInfoObj((prevPageInfoObj) => ({
+        ...prevPageInfoObj,
+        waste: responses[2].data.pageInfo,
+      }));
+      setLedger(responses[3].data.data);
+      setPageInfoObj((prevPageInfoObj) => ({
+        ...prevPageInfoObj,
+        combined: responses[3].data.pageInfo,
+      }));
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // 범위 조회 핸들러
   const handleDateRangeSelect = async (startDate: Moment, endDate: Moment) => {
     try {
       const requests = [
@@ -628,11 +667,11 @@ const History = () => {
             "YYYY-MM-DD"
           )}&endDate=${endDate.format("YYYY-MM-DD")}`
         ),
-        // api.get(
-        //   `/calendar/ledger/range?page=${activePage}&size=10&startDate=${startDate.format(
-        //     "YYYY-MM-DD"
-        //   )}&endDate=${endDate.format("YYYY-MM-DD")}`
-        // ),
+        api.get(
+          `/calendar/ledger/range?page=${activePage}&size=10&startDate=${startDate.format(
+            "YYYY-MM-DD"
+          )}&endDate=${endDate.format("YYYY-MM-DD")}`
+        ),
       ];
 
       const responses = await axios.all(requests);
@@ -653,11 +692,11 @@ const History = () => {
         ...prevPageInfoObj,
         waste: responses[2].data.pageInfo,
       }));
-      // setLedger(responses[3].data.data);
-      // setPageInfoObj((prevPageInfoObj) => ({
-      //   ...prevPageInfoObj,
-      //   combined: responses[3].data.pageInfo,
-      // }));
+      setLedger(responses[3].data.data);
+      setPageInfoObj((prevPageInfoObj) => ({
+        ...prevPageInfoObj,
+        combined: responses[3].data.pageInfo,
+      }));
     } catch (error) {
       console.error(error);
     }
@@ -767,6 +806,7 @@ const History = () => {
             <DateSelector
               getMoment={getMoment}
               setMoment={setMoment}
+              onDateSelect={handleDateSelect}
               onDateRangeSelect={handleDateRangeSelect}
             />
             <button
