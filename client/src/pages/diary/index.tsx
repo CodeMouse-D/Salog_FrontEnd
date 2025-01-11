@@ -45,6 +45,7 @@ interface tagType {
 const Diary = () => {
   const [diaries, setDiaries] = useState<diaryType[]>([]);
   const [tagLists, setTagLists] = useState<tagType[]>([]);
+  const [searchType, setSearchType] = useState<string>("title");
   const [searchVal, setSearchVal] = useState<string>("");
   // 전체보기 숫자에 사용 될 상태
   const [totalElement, setTotalElement] = useState<number>(0);
@@ -97,8 +98,12 @@ const Diary = () => {
     setSearchVal(e.target.value);
   };
 
+  const onChangeSearchType = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSearchType(e.target.value);
+  };
+
   const onClickSearchBtn = () => {
-    navigate(`${path}?title=${searchVal}`);
+    navigate(`${path}?searchType=${searchType}&query=${searchVal}`);
   };
 
   const onKeyDownSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -175,59 +180,55 @@ const Diary = () => {
     });
   }, [page, path, search]);
 
-  // API를 호출하는 부분
+  const handleResponse = (response: any) => {
+    if (page > 1) {
+      setDiaries((prevData) => [...prevData, ...response.data.data]);
+    } else {
+      setDiaries(response.data.data);
+      setPageInfo(response.data.pageInfo);
+      if (response.data.pageInfo) {
+        setTotalElement(response.data.pageInfo.totalElements);
+      }
+    }
+  };
+
   const fetchData = async () => {
     setIsLoading(true);
-    try {
-      // 쿼리 없이 일기만 가져올 때
-      if (search === "") {
-        const API_URL = `${path}?page=${page}&size=10`;
-        const response = await api.get(API_URL);
 
-        // 페이지가 1 이상이면 기존 상태에 추가 / 1이라면 상태를 응답 데이터로 초기화
-        if (page > 1) {
-          setDiaries((prevData) => [...prevData, ...response.data.data]);
-          //   setPageInfo(response.data.pageInfo);
-        } else {
-          setDiaries(response.data.data);
-          setPageInfo(response.data.pageInfo);
-          setTotalElement(response.data.pageInfo.totalElements);
+    try {
+      // 검색 기능
+      if (search.includes("searchType")) {
+        const searchParams = new URLSearchParams(search);
+        const searchType = searchParams.get("searchType");
+        const query = searchParams.get("query");
+
+        if (query && query.includes(" ")) {
+          alert("검색어에 공백을 포함할 수 없습니다");
+          return;
         }
-      }
-      // 쿼리가 있을 때 && 쿼리에 ?title이 존재할 때 (제목 검색)
-      else if (search.includes("?title")) {
-        const API_URL = `${path}/search?page=1&size=10${search.replace(
-          "?",
-          "&"
-        )}`;
+
+        const API_URL = `/diary/search?page=${page}&size=10&searchType=${searchType}&query=${query}`;
         const response = await api.get(API_URL);
-        // 페이지가 1 이상이면 기존 상태에 추가 / 1이라면 상태를 응답 데이터로 초기화
-        if (page > 1) {
-          setDiaries((prevData) => [...prevData, ...response.data.data]);
-          //   setPageInfo(response.data.pageInfo);
-        } else {
-          setDiaries(response.data.data);
-          setPageInfo(response.data.pageInfo);
-        }
+        handleResponse(response);
       }
-      // 쿼리가 있을 때(태그, 날짜)
+      // 일반 조회 (전체/태그/날짜)
       else {
-        const API_URL = `${path}?page=${page}&size=10${search.replace(
-          "?",
-          "&"
-        )}`;
+        const searchParams = new URLSearchParams(search);
+        const diaryTag = searchParams.get("diaryTag");
+        const date = searchParams.get("date");
+
+        let API_URL = `/diary?page=${page}&size=10`;
+
+        // 태그나 날짜 파라미터가 있으면 추가
+        if (diaryTag) API_URL += `&diaryTag=${diaryTag}`;
+        if (date) API_URL += `&date=${date}`;
+
         const response = await api.get(API_URL);
-        // 페이지가 1 이상이면 기존 상태에 추가 / 1이라면 상태를 응답 데이터로 초기화
-        if (page > 1) {
-          setDiaries((prevData) => [...prevData, ...response.data.data]);
-          //   setPageInfo(response.data.pageInfo);
-        } else {
-          setDiaries(response.data.data);
-          setPageInfo(response.data.pageInfo);
-        }
+        handleResponse(response);
       }
     } catch (error) {
-      console.log(error);
+      console.error("데이터 조회 중 오류 발생:", error);
+      // 에러 처리
     }
     setIsLoading(false);
   };
@@ -236,7 +237,7 @@ const Diary = () => {
     if (debouncedSearchVal === "") {
       navigate(`${path}`);
     } else {
-      navigate(`${path}?title=${debouncedSearchVal}`);
+      navigate(`${path}?searchType=${searchType}&query=${debouncedSearchVal}`);
     }
   }, [debouncedSearchVal]);
 
@@ -312,25 +313,35 @@ const Diary = () => {
           <RemainContainer>
             <SearchContainer>
               <div className="header">
-                <SvgIcon
-                  component={SearchOutlinedIcon}
-                  sx={{ stroke: "#ffffff", strokeWidth: 1 }}
-                />
-                <h3>검색</h3>
-              </div>
-              <hr />
-              <div className="search_input">
-                <Input
-                  placeholder="게시글 검색"
-                  onChange={onChangeSearchInput}
-                  onKeyDown={onKeyDownSearch}
-                />
-                <button onClick={onClickSearchBtn}>
+                <div className="header-left">
                   <SvgIcon
                     component={SearchOutlinedIcon}
                     sx={{ stroke: "#ffffff", strokeWidth: 1 }}
                   />
-                </button>
+                  <h3>검색</h3>
+                </div>
+                <select value={searchType} onChange={onChangeSearchType}>
+                  <option value="title">제목</option>
+                  <option value="body">내용</option>
+                  <option value="title_body">제목+내용</option>
+                </select>
+              </div>
+              <hr />
+              <div className="search_input">
+                <div className="search_row">
+                  <Input
+                    placeholder="게시글 검색"
+                    value={searchVal}
+                    onChange={onChangeSearchInput}
+                    onKeyDown={onKeyDownSearch}
+                  />
+                  <button onClick={onClickSearchBtn}>
+                    <SvgIcon
+                      component={SearchOutlinedIcon}
+                      sx={{ stroke: "#ffffff", strokeWidth: 1 }}
+                    />
+                  </button>
+                </div>
               </div>
             </SearchContainer>
             <CategoryContainer>
@@ -563,7 +574,6 @@ const NotDataContainer = styled.div`
 const SearchContainer = styled.div`
   border: 1px solid ${(props) => props.theme.COLORS.GRAY_400};
   border-radius: 4px;
-  /* margin-top: 12.8rem; */
   padding: 2rem;
   display: flex;
   flex-direction: column;
@@ -572,29 +582,56 @@ const SearchContainer = styled.div`
   .header {
     display: flex;
     align-items: center;
-    svg {
-      font-size: 2rem;
-      margin-right: 0.5rem;
+    justify-content: space-between;
+
+    .header-left {
+      display: flex;
+      align-items: center;
+
+      svg {
+        font-size: 2rem;
+        margin-right: 0.5rem;
+      }
+
+      h3 {
+        font-size: 1.6rem;
+        color: ${(props) => props.theme.COLORS.GRAY_600};
+      }
     }
 
-    h3 {
-      font-size: 1.6rem;
+    select {
+      height: 3rem;
+      padding: 0 1rem;
+      border: 1px solid ${(props) => props.theme.COLORS.GRAY_300};
+      border-radius: 4px;
+      font-size: 1.2rem;
       color: ${(props) => props.theme.COLORS.GRAY_600};
+      background-color: white;
     }
   }
 
   .search_input {
     display: flex;
+    flex-direction: column;
+    gap: 1rem;
     position: relative;
 
+    .search_row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
     input {
+      flex: 1;
       height: 4rem;
     }
 
     button {
       position: absolute;
       right: 1rem;
-      top: 30%;
+      top: 50%;
+      transform: translateY(-50%);
 
       svg {
         font-size: 2rem;
@@ -610,7 +647,7 @@ const SearchContainer = styled.div`
     width: 100%;
     border: none;
     height: 1px;
-    margin-bottom: 1.8rem;
+    margin: 1.8rem 0;
     background-color: ${(props) => props.theme.COLORS.GRAY_300};
   }
 `;

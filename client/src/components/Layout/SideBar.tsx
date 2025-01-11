@@ -40,6 +40,12 @@ export const SideBar = ({ isOpen, onClose }: SideBarProps) => {
 
   const onClickCloseBtn = () => {
     userLogout();
+
+    // 자동 로그인 관련 데이터 제거
+    localStorage.removeItem("savedEmail");
+    localStorage.removeItem("savedPassword");
+    localStorage.removeItem("accessToken");
+
     dispatch(logout());
     navigate("/login", { replace: true });
   };

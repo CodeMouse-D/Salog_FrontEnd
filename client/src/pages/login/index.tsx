@@ -46,6 +46,7 @@ const Login = () => {
   const [values, setValues] = useState<userType>({ email: "", password: "" });
   const [error, setError] = useState<userType>({ email: "", password: "" });
   const [isVisible, setIsVisible] = useState<boolean>(false);
+  const [saveId, setSaveId] = useState<boolean>(false);
   const [autoLogin, setAutoLogin] = useState<boolean>(false);
   const member = useSelector((state: RootState) => state.persistedReducer.user);
   const modal = useSelector((state: RootState) => state.persistedReducer.toast);
@@ -96,29 +97,37 @@ const Login = () => {
       current.setMinutes(current.getMinutes() + 30);
 
       // 토큰 설정
-      setCookie("accessToken", response.data.accessToken, {
+      const accessToken = response.data.accessToken;
+      setCookie("accessToken", accessToken, {
         path: "/",
         expires: current,
       });
-      localStorage.setItem("accessToken", response.data.accessToken);
+      localStorage.setItem("accessToken", accessToken);
 
       // 자동 로그인 처리
-      const refreshTokenExpiry = autoLogin
-        ? new Date(current.getTime() + 30 * 24 * 60 * 60 * 1000) // 30일
-        : new Date(current.getTime() + 24 * 60 * 60 * 1000); // 1일
-
-      setCookie("refreshToken", response.data.refreshToken, {
-        path: "/",
-        expires: refreshTokenExpiry,
-      });
-
-      // 자동 로그인 정보 저장
       if (autoLogin) {
+        const refreshTokenExpiry = new Date(
+          current.getTime() + 30 * 24 * 60 * 60 * 1000
+        );
+        setCookie("refreshToken", response.data.refreshToken, {
+          path: "/",
+          expires: refreshTokenExpiry,
+        });
+
+        // 자동 로그인 정보 저장
         localStorage.setItem("savedEmail", email);
         localStorage.setItem("savedPassword", password);
       } else {
+        // 자동 로그인이 해제되면 관련 정보 삭제
         localStorage.removeItem("savedEmail");
         localStorage.removeItem("savedPassword");
+      }
+
+      // 아이디 저장 처리
+      if (saveId) {
+        localStorage.setItem("rememberedId", email);
+      } else {
+        localStorage.removeItem("rememberedId");
       }
 
       // 사용자 정보 가져오기
@@ -143,23 +152,35 @@ const Login = () => {
     }
   };
 
+  // 아이디 저장 체크박스 핸들러
+  const handleSaveIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSaveId(e.target.checked);
+  };
+
   useEffect(() => {
-    const checkSavedCredentials = async () => {
-      const savedEmail = localStorage.getItem("savedEmail");
-      const savedPassword = localStorage.getItem("savedPassword");
+    const savedEmail = localStorage.getItem("savedEmail");
+    const savedPassword = localStorage.getItem("savedPassword");
+    const rememberedId = localStorage.getItem("rememberedId");
 
-      if (savedEmail && savedPassword) {
-        setValues({ email: savedEmail, password: savedPassword });
-        setAutoLogin(true);
-        try {
-          await handleLogin(savedEmail, savedPassword);
-        } catch (error) {
-          console.error("자동 로그인 실패:", error);
-        }
+    // 자동 로그인 정보가 있는 경우
+    if (savedEmail && savedPassword) {
+      setValues({ email: savedEmail, password: savedPassword });
+      setAutoLogin(true);
+      setSaveId(true);
+      try {
+        void handleLogin(savedEmail, savedPassword);
+      } catch (error) {
+        console.error("자동 로그인 실패:", error);
+        localStorage.removeItem("savedEmail");
+        localStorage.removeItem("savedPassword");
+        localStorage.removeItem("accessToken");
       }
-    };
-
-    void checkSavedCredentials();
+    }
+    // 저장된 아이디만 있는 경우
+    else if (rememberedId) {
+      setValues((prev) => ({ ...prev, email: rememberedId }));
+      setSaveId(true);
+    }
   }, []);
 
   // user 전역 상태가 변경되면 실행
@@ -226,12 +247,23 @@ const Login = () => {
         <LoginDiv>
           <form onSubmit={onClickLoginBtn}>
             <Title>이메일</Title>
-            <Input
-              type="email"
-              name="email"
-              onChange={onChangeValues}
-              value={values.email}
-            />
+            <EmailInputWrapper>
+              <Input
+                type="email"
+                name="email"
+                onChange={onChangeValues}
+                value={values.email}
+              />
+              <SaveIdWrapper>
+                <input
+                  type="checkbox"
+                  id="saveId"
+                  checked={saveId}
+                  onChange={handleSaveIdChange}
+                />
+                <label htmlFor="saveId">아이디 저장</label>
+              </SaveIdWrapper>
+            </EmailInputWrapper>
             <span>{error.email}</span>
             <Title>비밀번호</Title>
             <PasswordLabel>
@@ -362,6 +394,34 @@ export const PasswordLabel = styled.label`
     svg {
       font-size: 20px;
     }
+  }
+`;
+
+// 스타일 추가
+const EmailInputWrapper = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
+const SaveIdWrapper = styled.div`
+  position: absolute;
+  right: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+
+  input[type="checkbox"] {
+    width: 1.6rem;
+    height: 1.6rem;
+    margin-right: 0.8rem;
+    cursor: pointer;
+  }
+
+  label {
+    color: ${(props) => props.theme.COLORS.GRAY_500};
+    font-size: 1.4rem;
+    cursor: pointer;
   }
 `;
 
