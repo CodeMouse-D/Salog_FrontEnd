@@ -70,7 +70,11 @@ export const SideBar = ({ isOpen, onClose }: SideBarProps) => {
         )}
         <NavTitle>ACCOUNT BOOK</NavTitle>
         <Lists>
-          <NavStyle to="/dashboard" $isOpen={isOpen}>
+          <NavStyle
+            to="/dashboard"
+            $isOpen={isOpen}
+            onClick={() => onClose?.()}
+          >
             <SvgIcon
               component={GridViewIcon}
               sx={{ stroke: "#ffffff", strokeWidth: 0.5 }}

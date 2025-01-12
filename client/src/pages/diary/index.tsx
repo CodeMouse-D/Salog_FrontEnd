@@ -69,15 +69,48 @@ const Diary = () => {
   const path = useLocation().pathname;
   const search = useLocation().search;
 
+  console.log(search);
+
   // 이전 경로를 저장하기 위한 상태
   const [previousPath, setPreviousPath] = useState(path);
   const [previousSearch, setPreviousSearch] = useState(search);
 
   // 이전 path와 search 값 저장 변수
   const decodeUrl = decodeURI(search).split("=")[1];
+  const searchParams = new URLSearchParams(search);
   const target = useRef(null);
 
   const navigate = useNavigate();
+
+  const getDisplayText = () => {
+    const searchType = searchParams.get("searchType");
+    const query = searchParams.get("query");
+    const tag = searchParams.get("diaryTag");
+    const date = searchParams.get("date");
+
+    // 검색어가 있는 경우
+    if (searchType && query) {
+      return query;
+    }
+
+    // 태그로 필터링하는 경우
+    if (tag) {
+      return tag;
+    }
+
+    // 날짜로 필터링하는 경우
+    if (date) {
+      return date;
+    }
+
+    // 전체보기
+    return "분류 전체보기";
+  };
+
+  const getHeaderText = () => {
+    const displayText = getDisplayText();
+    return `${displayText} (${pageInfo.totalElements})`;
+  };
 
   const scrollToTop = () => {
     window.scrollTo({
@@ -262,9 +295,7 @@ const Diary = () => {
               {search === "" || search === "?title=" ? (
                 <h3>분류 전체보기 ({pageInfo.totalElements})</h3>
               ) : (
-                <h3>
-                  {decodeUrl} ({pageInfo.totalElements})
-                </h3>
+                <h3>{getHeaderText()}</h3>
               )}
               <ListContainer>
                 {diaries?.map((diary) => {
